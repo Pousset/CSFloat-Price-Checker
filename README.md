@@ -6,18 +6,15 @@ Un outil Python interactif pour récupérer et analyser les prix des skins CS2 d
 
 ## 📋 Sommaire
 
-- [🎯 CSFloat Price Checker](#-csfloat-price-checker)
-  - [📋 Sommaire](#-sommaire)
-  - [✨ Fonctionnalités](#-fonctionnalités)
-  - [🔧 Prérequis](#-prérequis)
-  - [📦 Installation](#-installation)
-  - [🔑 Configuration de la clé API](#-configuration-de-la-clé-api)
-  - [🚀 Utilisation](#-utilisation)
-  - [📊 Exemple de sortie](#-exemple-de-sortie)
-  - [🗂 Structure des données](#-structure-des-données)
-  - [⚠️ Limites de l'API](#️-limites-de-lapi)
-  - [❓ FAQ](#-faq)
-  - [📄 Licence](#-licence)
+- [Fonctionnalités](#-fonctionnalités)
+- [Prérequis](#-prérequis)
+- [Installation](#-installation)
+- [Configuration de la clé API](#-configuration-de-la-clé-api)
+- [Utilisation](#-utilisation)
+- [Exemple de sortie](#-exemple-de-sortie)
+- [Structure des données](#-structure-des-données)
+- [Limites de l'API](#-limites-de-lapi)
+- [FAQ](#-faq)
 
 ---
 
@@ -47,8 +44,8 @@ Un outil Python interactif pour récupérer et analyser les prix des skins CS2 d
 git clone https://github.com/ton-user/csfloat-price-checker.git
 cd csfloat-price-checker
 
-# Installer la dépendance
-pip install requests
+# Installer les dépendances
+pip install requests python-dotenv
 ```
 
 ---
@@ -58,31 +55,19 @@ pip install requests
 1. Connecte-toi sur [csfloat.com](https://csfloat.com)
 2. Va dans **Profil → onglet "Developer"**
 3. Génère une nouvelle clé API
-4. Configure-la selon ta préférence :
-
-**Option A — Variable d'environnement (recommandée)**
+4. Copie le fichier `.env.example` en `.env` :
 
 ```bash
-# Linux / macOS
-export CSFLOAT_API_KEY=ta_cle_ici
-
-# Windows (PowerShell)
-$env:CSFLOAT_API_KEY="ta_cle_ici"
+cp .env.example .env
 ```
 
-**Option B — Directement dans le fichier**
+5. Ouvre `.env` et renseigne ta clé :
 
-Ouvre `csfloat_price_checker.py` et remplace :
-
-```python
-API_KEY = os.getenv("CSFLOAT_API_KEY", "VOTRE_CLE_API_ICI")
+```env
+CSFLOAT_API_KEY=ta_cle_api_ici
 ```
 
-par :
-
-```python
-API_KEY = "ta_cle_ici"
-```
+> ✅ Le fichier `.env` est listé dans `.gitignore` — ta clé ne sera **jamais** poussée sur Git.
 
 ---
 
@@ -181,13 +166,26 @@ Lors de l'export JSON, le fichier généré contient :
 
 ---
 
+## 📁 Structure du projet
+
+```
+csfloat-price-checker/
+├── csfloat_price_checker.py   # Script principal
+├── .env.example               # Modèle de configuration (à copier en .env)
+├── .env                       # Ta clé API — ignoré par Git ✅
+├── .gitignore                 # Protège .env et les exports JSON
+└── README.md
+```
+
+---
+
 ## ⚠️ Limites de l'API
 
-| Limite               | Valeur                                 |
-| -------------------- | -------------------------------------- |
-| Listings par requête | 50 max                                 |
-| Rate limit           | Quelques centaines de requêtes / heure |
-| Authentification     | Clé API obligatoire                    |
+| Limite | Valeur |
+|--------|--------|
+| Listings par requête | 50 max |
+| Rate limit | Quelques centaines de requêtes / heure |
+| Authentification | Clé API obligatoire |
 
 En cas d'erreur `429 Too Many Requests`, attends quelques minutes avant de relancer.
 
@@ -197,7 +195,6 @@ En cas d'erreur `429 Too Many Requests`, attends quelques minutes avant de relan
 
 **Le script retourne "Aucun listing trouvé"**
 → Vérifie l'orthographe du nom (respecte les majuscules et les `|`). Exemples valides :
-
 - `AK-47 | Redline`
 - `M4A4 | Poseidon`
 - `AWP | Dragon Lore`
