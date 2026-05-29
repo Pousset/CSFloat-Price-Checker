@@ -8,33 +8,29 @@ echo  ║     CSFloat Price Checker — Build EXE    ║
 echo  ╚══════════════════════════════════════════╝
 echo.
 
-:: ── Vérifier Python ───────────────────────────────────────────────────────────
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo  [ERREUR] Python n'est pas installe ou pas dans le PATH.
+    echo  [ERREUR] Python introuvable dans le PATH.
     pause & exit /b 1
 )
 
-:: ── Installer les dépendances ─────────────────────────────────────────────────
 echo  [1/3] Installation des dependances...
-python -m pip install requests python-dotenv pyinstaller --quiet
+python -m pip install requests python-dotenv pillow pyinstaller --quiet
 if errorlevel 1 (
-    echo  [ERREUR] Echec de pip install.
+    echo  [ERREUR] Echec pip install.
     pause & exit /b 1
 )
 echo         OK
 echo.
 
-:: ── Nettoyage build précédent ─────────────────────────────────────────────────
-echo  [2/3] Nettoyage des anciens builds...
+echo  [2/3] Nettoyage anciens builds...
 if exist "dist\CSFloat_Price_Checker.exe" del /f /q "dist\CSFloat_Price_Checker.exe"
 if exist "build" rmdir /s /q "build"
 if exist "CSFloat_Price_Checker.spec" del /f /q "CSFloat_Price_Checker.spec"
 echo         OK
 echo.
 
-:: ── Compilation PyInstaller ───────────────────────────────────────────────────
-echo  [3/3] Compilation en cours (peut prendre 1-2 minutes)...
+echo  [3/3] Compilation (1-2 minutes)...
 echo.
 
 python -m PyInstaller ^
@@ -43,6 +39,9 @@ python -m PyInstaller ^
     --name "CSFloat_Price_Checker" ^
     --hidden-import "requests" ^
     --hidden-import "dotenv" ^
+    --hidden-import "PIL" ^
+    --hidden-import "PIL.Image" ^
+    --hidden-import "PIL.ImageTk" ^
     --hidden-import "tkinter" ^
     --hidden-import "tkinter.ttk" ^
     --hidden-import "tkinter.messagebox" ^
@@ -51,27 +50,22 @@ python -m PyInstaller ^
 
 if errorlevel 1 (
     echo.
-    echo  [ERREUR] La compilation a echoue. Voir les messages ci-dessus.
+    echo  [ERREUR] Compilation echouee.
     pause & exit /b 1
 )
 
-:: ── Copier le .env à côté du .exe ─────────────────────────────────────────────
 if exist ".env" (
     echo.
-    echo  Copie du fichier .env dans dist\...
+    echo  Copie .env dans dist\...
     copy ".env" "dist\.env" >nul
-    echo  Le .exe lira automatiquement la cle API depuis dist\.env
 )
 
-:: ── Succès ────────────────────────────────────────────────────────────────────
 echo.
 echo  ╔══════════════════════════════════════════╗
 echo  ║  BUILD REUSSI !                          ║
-echo  ║                                          ║
-echo  ║  Ton executable est dans :               ║
 echo  ║  dist\CSFloat_Price_Checker.exe          ║
 echo  ╚══════════════════════════════════════════╝
 echo.
-echo  Note : garde le fichier .env dans le meme dossier que le .exe
+echo  Garde le .env dans le meme dossier que le .exe
 echo.
 pause
