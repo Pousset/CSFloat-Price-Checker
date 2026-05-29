@@ -1,0 +1,10 @@
+{
+  "name": "csfloat-price-checker",
+  "version": "1.0.0",
+  "description": "CSFloat Price Checker - Scripts utilitaires",
+  "scripts": {
+    "test": "python run_tests.py",
+    "build": "build.bat",
+    "clean": "if exist dist rmdir /s /q dist & if exist build rmdir /s /q build & if exist CSFloat_Price_Checker.spec del /f /q CSFloat_Price_Checker.spec & echo Build nettoye."
+  }
+}

@@ -5,7 +5,13 @@
 .env.*.local
 
 # ── Exports JSON générés par le script ───────────────────
-*.json
+exports_*.json
+prices_*.json
+
+# ── Build PyInstaller ─────────────────────────────────────
+dist/
+build/
+*.spec
 
 # ── Python ───────────────────────────────────────────────
 __pycache__/
