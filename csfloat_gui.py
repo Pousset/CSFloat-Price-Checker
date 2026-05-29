@@ -15,6 +15,7 @@ import statistics
 import json
 import os
 import io
+import webbrowser
 from PIL import Image, ImageTk
 from dotenv import load_dotenv
 
@@ -64,6 +65,8 @@ FONT_SMALL = ("Consolas", 9)
 FONT_STAT  = ("Consolas", 20, "bold")
 
 IMG_CACHE: dict[str, ImageTk.PhotoImage] = {}
+
+EUR_RATE_DEFAULT = 0.92  # taux de repli USD→EUR
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -197,9 +200,13 @@ class CSFloatApp(tk.Tk):
         self.sel_skin    = {}
         self.listings_cache: list[dict] = []
         self.stats_cache: dict = {}
+        self._last_price_name = ""
+        self.currency_var = tk.StringVar(value="EUR")
+        self.eur_rate = EUR_RATE_DEFAULT
 
         self._build_ui()
         self._load_skins_db()
+        threading.Thread(target=self._fetch_eur_rate, daemon=True).start()
 
     # ── UI Globale ────────────────────────────────────────────────────────────
 
@@ -246,6 +253,17 @@ class CSFloatApp(tk.Tk):
                            font=FONT_SMALL, cursor="hand2", padx=6, pady=4)
         val_btn.pack(side="left", padx=8)
         val_btn.bind("<Button-1>", lambda e: self._validate_key())
+
+        # ── Sélecteur de devise ─────────────────────────────────────────────
+        tk.Frame(api_bar, bg=BORDER, width=1).pack(side="left", fill="y", padx=8)
+        tk.Label(api_bar, text="DEVISE :", font=FONT_SMALL,
+                 bg=BG3, fg=MUTED).pack(side="left")
+        self._curr_btn = tk.Label(api_bar, text="EUR", bg=CARD, fg=ACCENT,
+                                   font=("Consolas", 9, "bold"), cursor="hand2",
+                                   padx=10, pady=4,
+                                   highlightbackground=ACCENT, highlightthickness=1)
+        self._curr_btn.pack(side="left", padx=6)
+        self._curr_btn.bind("<Button-1>", lambda e: self._toggle_currency())
 
         # ── Breadcrumb ──────────────────────────────────────────────────────
         self.breadcrumb_bar = tk.Frame(self, bg=BG2, padx=16, pady=6)
@@ -320,6 +338,34 @@ class CSFloatApp(tk.Tk):
     def _set_status(self, text, color):
         self.status_lbl.config(text=text, fg=color)
         self.status_dot.config(fg=color)
+
+    # ── Devise ────────────────────────────────────────────────────────────────
+
+    def _fetch_eur_rate(self):
+        try:
+            r = requests.get("https://open.er-api.com/v6/latest/USD", timeout=8)
+            self.eur_rate = r.json()["rates"]["EUR"]
+        except Exception:
+            pass  # garde le taux par défaut
+
+    def _toggle_currency(self):
+        if self.currency_var.get() == "EUR":
+            self.currency_var.set("USD")
+            self._curr_btn.config(text="USD", fg=ACCENT2,
+                                   highlightbackground=ACCENT2)
+        else:
+            self.currency_var.set("EUR")
+            self._curr_btn.config(text="EUR", fg=ACCENT,
+                                   highlightbackground=ACCENT)
+        # Rafraîchit les résultats si déjà affichés
+        if self.listings_cache and self._last_price_name:
+            self._show_price_results(
+                self._last_price_name, self.listings_cache, self.stats_cache)
+
+    def format_price(self, cents: int) -> str:
+        if self.currency_var.get() == "EUR":
+            return f"{cents / 100 * self.eur_rate:.2f} €"
+        return f"${cents / 100:.2f}"
 
     # ── Chargement DB skins ───────────────────────────────────────────────────
 
@@ -687,6 +733,7 @@ class CSFloatApp(tk.Tk):
                  fg=RED, wraplength=300, justify="center").pack(pady=8)
 
     def _show_price_results(self, name, listings, stats):
+        self._last_price_name = name
         for w in self.results_right.winfo_children():
             w.destroy()
 
@@ -709,10 +756,10 @@ class CSFloatApp(tk.Tk):
         cards_row.pack(fill="x", pady=(0, 14))
 
         for i, (label, value, color) in enumerate([
-            ("MINIMUM",  cents_to_usd(stats["min"]),          GREEN),
-            ("MOYENNE",  cents_to_usd(int(stats["mean"])),    ACCENT),
-            ("MÉDIANE",  cents_to_usd(int(stats["median"])), ACCENT2),
-            ("MAXIMUM",  cents_to_usd(stats["max"]),          RED),
+            ("MINIMUM",  self.format_price(stats["min"]),          GREEN),
+            ("MOYENNE",  self.format_price(int(stats["mean"])),    ACCENT),
+            ("MÉDIANE",  self.format_price(int(stats["median"])), ACCENT2),
+            ("MAXIMUM",  self.format_price(stats["max"]),          RED),
         ]):
             c = tk.Frame(cards_row, bg=CARD,
                          highlightbackground=BORDER, highlightthickness=1)
@@ -726,7 +773,7 @@ class CSFloatApp(tk.Tk):
 
         tk.Label(pad,
                  text=f"● {stats['count']} listings  ·  "
-                      f"Écart-type : {cents_to_usd(int(stats.get('stdev', 0)))}",
+                      f"Écart-type : {self.format_price(int(stats.get('stdev', 0)))}",
                  font=FONT_SMALL, bg=BG, fg=MUTED).pack(anchor="w", pady=(0, 12))
 
         tk.Frame(pad, bg=BORDER, height=1).pack(fill="x", pady=(0, 12))
@@ -745,22 +792,24 @@ class CSFloatApp(tk.Tk):
         # Table
         table = tk.Frame(pad, bg=BG)
         table.pack(fill="x")
-        headers = ["#", "Prix", "Float", "Wear", "ST"]
-        widths   = [3,    10,    12,      14,     4]
+        headers = ["#", "Prix", "Float", "Wear", "ST", "Lien"]
+        widths   = [3,    10,    12,      14,     4,    6]
         for col, (h, w_) in enumerate(zip(headers, widths)):
             tk.Label(table, text=h, font=FONT_SMALL, bg=BG3, fg=MUTED,
                      width=w_, anchor="w", padx=8, pady=4
                      ).grid(row=0, column=col, sticky="ew", padx=(0, 1))
 
         for i, listing in enumerate(listings[:30], 1):
-            rb     = CARD if i % 2 == 0 else BG2
-            price  = cents_to_usd(listing.get("price", 0))
-            item   = listing.get("item", {})
-            fval   = item.get("float_value", "N/A")
-            fval_s = f"{fval:.6f}" if isinstance(fval, float) else str(fval)
-            wear   = item.get("wear_name", "—")
-            st     = "✓" if item.get("is_stattrak") else "—"
-            pfg    = GREEN if listing.get("price") == stats["min"] else TEXT
+            rb        = CARD if i % 2 == 0 else BG2
+            price     = self.format_price(listing.get("price", 0))
+            item      = listing.get("item", {})
+            fval      = item.get("float_value", "N/A")
+            fval_s    = f"{fval:.6f}" if isinstance(fval, float) else str(fval)
+            wear      = item.get("wear_name", "—")
+            st        = "✓" if item.get("is_stattrak") else "—"
+            pfg       = GREEN if listing.get("price") == stats["min"] else TEXT
+            listing_id = listing.get("id", "")
+            url       = f"https://csfloat.com/item/{listing_id}" if listing_id else ""
 
             for col, (val, fg) in enumerate(zip(
                 [str(i), price, fval_s, wear, st],
@@ -771,6 +820,17 @@ class CSFloatApp(tk.Tk):
                          anchor="w", padx=8, pady=5
                          ).grid(row=i, column=col, sticky="ew",
                                 padx=(0, 1), pady=1)
+
+            # Colonne lien
+            lnk = tk.Label(table, text="↗", font=FONT_SMALL,
+                           bg=rb, fg=ACCENT2 if url else MUTED,
+                           width=widths[5], anchor="w", padx=8, pady=5,
+                           cursor="hand2" if url else "arrow")
+            lnk.grid(row=i, column=5, sticky="ew", padx=(0, 1), pady=1)
+            if url:
+                lnk.bind("<Button-1>", lambda e, u=url: webbrowser.open(u))
+                lnk.bind("<Enter>", lambda e, l=lnk, r=rb: l.config(fg=TEXT, bg=CARD_H))
+                lnk.bind("<Leave>", lambda e, l=lnk, r=rb: l.config(fg=ACCENT2, bg=r))
 
     def _export_json(self):
         if not self.listings_cache:
