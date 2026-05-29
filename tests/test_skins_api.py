@@ -10,8 +10,8 @@ import os
 import unittest
 from unittest.mock import patch, MagicMock
 
-# Ajouter le dossier parent au path pour importer le module GUI
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ajouter le dossier App au path pour importer le module GUI
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "App"))
 
 # On importe uniquement fetch_skins_db depuis le GUI
 from csfloat_gui import fetch_skins_db, SKINS_API

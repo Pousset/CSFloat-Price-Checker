@@ -10,8 +10,8 @@ import os
 import unittest
 from unittest.mock import patch, MagicMock
 
-# Ajouter le dossier parent au path pour importer le module principal
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ajouter le dossier App au path pour importer le module principal
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "App"))
 
 from csfloat_price_checker import fetch_listings, analyze_prices, cents_to_usd
 
