@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "CSFloat Price Checker - Scripts utilitaires",
   "scripts": {
-    "test": "python run_tests.py",
+    "test": "python tests/run_tests.py",
     "build": "build.bat",
-    "clean": "if exist dist rmdir /s /q dist & if exist build rmdir /s /q build & if exist CSFloat_Price_Checker.spec del /f /q CSFloat_Price_Checker.spec & echo Build nettoye."
+    "clean": "if exist dist\\CSFloat_Price_Checker.exe del /f /q dist\\CSFloat_Price_Checker.exe & if exist App\\releases\\build rmdir /s /q App\\releases\\build & if exist App\\releases\\CSFloat_Price_Checker.spec del /f /q App\\releases\\CSFloat_Price_Checker.spec & echo Build nettoye."
   }
 }

@@ -9,9 +9,13 @@ exports_*.json
 prices_*.json
 
 # ── Build PyInstaller ─────────────────────────────────────
-dist/
-build/
-*.spec
+App/releases/dist/
+App/releases/build/
+App/releases/*.spec
+
+# ── dist racine (garder le dossier, ignorer son contenu) ──
+dist/*
+!dist/.gitkeep
 
 # ── Python ───────────────────────────────────────────────
 __pycache__/

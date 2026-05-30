@@ -7,8 +7,10 @@ import time
 import sys
 import os
 
-# S'assure que le dossier racine est dans le path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Dossiers nécessaires : racine du projet et dossier App
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _root)
+sys.path.insert(0, os.path.join(_root, "App"))
 
 VERT  = "\033[92m"
 ROUGE = "\033[91m"
@@ -18,7 +20,7 @@ RESET = "\033[0m"
 
 if __name__ == "__main__":
     loader = unittest.TestLoader()
-    suite  = loader.discover(start_dir="tests", pattern="test_*.py")
+    suite  = loader.discover(start_dir=os.path.dirname(os.path.abspath(__file__)), pattern="test_*.py")
 
     print(f"\n{'═' * 55}")
     print(f"  {GRAS}CSFloat Price Checker — Tests{RESET}")

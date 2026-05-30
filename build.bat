@@ -25,8 +25,8 @@ echo.
 
 echo  [2/3] Nettoyage anciens builds...
 if exist "dist\CSFloat_Price_Checker.exe" del /f /q "dist\CSFloat_Price_Checker.exe"
-if exist "build" rmdir /s /q "build"
-if exist "CSFloat_Price_Checker.spec" del /f /q "CSFloat_Price_Checker.spec"
+if exist "App\releases\build" rmdir /s /q "App\releases\build"
+if exist "App\releases\CSFloat_Price_Checker.spec" del /f /q "App\releases\CSFloat_Price_Checker.spec"
 echo         OK
 echo.
 
@@ -37,6 +37,9 @@ python -m PyInstaller ^
     --onefile ^
     --windowed ^
     --name "CSFloat_Price_Checker" ^
+    --distpath "dist" ^
+    --workpath "App\releases\build" ^
+    --specpath "App\releases" ^
     --hidden-import "requests" ^
     --hidden-import "dotenv" ^
     --hidden-import "PIL" ^
@@ -46,7 +49,7 @@ python -m PyInstaller ^
     --hidden-import "tkinter.ttk" ^
     --hidden-import "tkinter.messagebox" ^
     --hidden-import "tkinter.filedialog" ^
-    csfloat_gui.py
+    App\csfloat_gui.py
 
 if errorlevel 1 (
     echo.
